@@ -1,12 +1,86 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import {
+  Outlet,
+  RouterProvider,
+  Link,
+  Router,
+  Route,
+  RootRoute,
+  useParams,
+  useSearch,
+} from "@tanstack/react-router";
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import "./App.css";
+
+const rootRoute = new RootRoute({
+  component: () => (
+    <>
+      <div>
+        <Link to="/">Home</Link>{" "}
+        <Link
+          to="/about/$userId"
+          params={{
+            userId: "123",
+          }}
+          search={{}}
+        >
+          About
+        </Link>
+      </div>
+      <hr />
+      <Outlet />
+    </>
+  ),
+});
+
+const indexRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: function Index() {
+    return (
+      <div>
+        <h3>Welcome Home!</h3>
+      </div>
+    );
+  },
+});
+
+const aboutRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: "/about/$userId",
+  validateSearch: (): {
+    hello?: string;
+  } => {
+    return {
+      hello: "world",
+    };
+  },
+  component: () => {
+    const { userId } = useParams({ from: aboutRoute.id });
+    const d = useSearch({ from: aboutRoute.id });
+
+    console.log(d);
+
+    return <div>Hello from About! {userId}</div>;
+  },
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, aboutRoute]);
+
+const router = new Router({ routeTree });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <div className="App">
+      <RouterProvider router={router} />
       <div>
         <a href="https://vitejs.dev" target="_blank">
           <img src="/vite.svg" className="logo" alt="Vite logo" />
@@ -28,7 +102,7 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
